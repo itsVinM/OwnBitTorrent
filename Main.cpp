@@ -1,3 +1,4 @@
+//hjiang
 #include <cctype>
 #include <charconv>
 #include <cstdlib>
@@ -23,78 +24,78 @@ int64_t read_int64(const char *begin, const char *end){
 	return number;
 }
 
-std::pair<json, string_view> decode_next(std::string_view sv);
+std::pair<json, string_view> decode_next(std::string_view strv);
 
-auto decode_string(string_view sv){
+auto decode_string(string_view strv){
 	// "5:hello" -> "hello"
-	auto data=sv.data();
-	size_t colon_index=sv.find(":");
+	auto data=strv.data();
+	size_t colon_index=strv.find(":");
 	if (colon_index != std::string::npos) {
     		int64_t number = read_int64(data, data + colon_index);
     		string_view str_sv(data + colon_index + 1, number);
-    		sv.remove_prefix(colon_index + 1 + number);
-		return make_pair(json(str_sv), sv);
+    		strv.remove_prefix(colon_index + 1 + number);
+		return make_pair(json(str_sv), strv);
 	} else {
-		throw std::runtime_error("Invalid encoded value: "+ std::string(sv));
+		throw std::runtime_error("Invalid encoded value: "+ std::string(strv));
 	}
 }
 
-auto decode_int(string_view sv){
+auto decode_int(string_view strv){
 	// "i42e" -> 42
-	size_t index=sv.find("e");
+	size_t index=strv.find("e");
 	
 	if (index != std::string::npos) {
-	    auto data = sv.data();
-	    sv.remove_prefix(index + 1);
-	    return make_pair(json(read_int64(data + 1, data + index)), sv);
+	    auto data = strv.data();
+	    strv.remove_prefix(index + 1);
+	    return make_pair(json(read_int64(data + 1, data + index)), strv);
 	} else {
-	    throw std::runtime_error("Invalid encoded value: " + std::string(sv));
+	    throw std::runtime_error("Invalid encoded value: " + std::string(strv));
 	}
 }
 	
-auto decode_list(string_view sv){
+auto decode_list(string_view strv){
 	// l5:helloi52ee -> ["hello", 52]
 	auto result=json::array();
-	sv.remove_prefix(1);
-	while (sv[0] != 'e'){
-		auto[next, rest]=decode_next(sv);
+	strv.remove_prefix(1);
+	while (strv[0] != 'e'){
+		auto[next, rest]=decode_next(strv);
 		result.push_back(next);
-		sv=rest;
+		strv=rest;
 	};
-	sv.remove_prefix(1);
-	return make_pair(result, sv);
+	strv.remove_prefix(1);
+	return make_pair(result, strv);
 }
 
 
-auto decode_map(string_view sv){
+auto decode_map(string_view strv){
 	// d3:foo3:bar5:helloi52ee -> {"foo":"bar","hello":52}
 	auto result= json::object();
-	sv.remove_prefix(1);
-	while(sv[0] != 'e'){
-		auto[key, rest1]=decode_next(sv);
+	strv.remove_prefix(1);
+	while(strv[0] != 'e'){
+		auto[key, rest1]=decode_next(strv);
 		auto[value, rest2]=decode_next(rest1);
-		sv=rest2;
+		strv=rest2;
 		result[key]=value;
 	};
-	sv.remove_prefix(1);
-	return make_pair(result, sv);
+	strv.remove_prefix(1);
+	return make_pair(result, strv);
 }
 
 
-std::pair<json, string_view> decode_next(std::string_view sv){
-	if(sv.empty()){
-		throw std::runtime_error("Invalid encoded value: " + std::string(sv));
+std::pair<json, string_view> decode_next(std::string_view strv){
+	if(strv.empty()){
+		throw std::runtime_error("Invalid encoded value: " + std::string(strv));
 	}
-	if (std::isdigit(sv[0])) {
-	    return decode_string(sv);
-	} else if ('i' == sv[0]) {
-	    return decode_int(sv);
-	} else if ('l' == sv[0]) {
-	    return decode_list(sv);
-	} else if ('d' == sv[0]) {
-	    return decode_map(sv);
+	if (std::isdigit(strv[0])) {
+	    return decode_string(strv);
+	} else if ('i' == strv[0]) {
+	    return decode_int(strv);
+	} else if ('l' == strv[0]) {
+	    return decode_list(strv);
+	} else if ('d' == strv[0]) {
+	    return decode_map(strv);
 	} else {
-	    throw std::runtime_error("Unhandled encoded value: " + std::string(sv));
+	    throw std::runtime_error("Unhandled encoded value: " + std::string(strv));
 	}
 }
 
