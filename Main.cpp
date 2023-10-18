@@ -1,4 +1,3 @@
-//hjiang
 #include <cctype>
 #include <charconv>
 #include <cstdlib>
