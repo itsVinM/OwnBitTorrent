@@ -106,6 +106,20 @@ json decode_bencoded_value(const std::string& encoded_value){
 
 	
 		
+// function to read  metainfo file of torrent
+std::string read_file(const std::string &path){
+
+	/*./your_bittorrent.sh info sample.torrent 
+	Tracker URL: http://bittorrent-test-tracker.codecrafters.io/announce
+	Length: 92063
+	*/
+	std::ifstream inf(path);
+	std::string contents((std::istreambuf_iterator<char>(inf)),
+				std::istreambuf_iterator<char>());
+	return contents;
+};
+	
+	
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " decode <encoded_value>" << std::endl;
@@ -123,11 +137,24 @@ int main(int argc, char* argv[]) {
         std::string encoded_value = argv[2];
         json decoded_value = decode_bencoded_value(encoded_value);
         std::cout << decoded_value.dump() << std::endl;
+        
+    }else if(command == "info"){
+	 if (argc < 3) {
+            std::cerr << "Usage: " << argv[0] << " decode <encoded_value>" << std::endl;
+            return 1;
+        }
+	std::string torrent_file(argv[2]);
+	json info = decode_bencoded_value(read_file(torrent_file));
+	std::cout  << "Tracker URL: " << info["announce"].get<std::string>()<< std::endl;
+    	std::cout << "Length: " << info["info"]["length"] << std::endl;  
  
     } else {
         std::cerr << "unknown command: " << command << std::endl;
         return 1;
     }
+
+    return 0;
+}
 
     return 0;
 }
